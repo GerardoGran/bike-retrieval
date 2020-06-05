@@ -1,6 +1,7 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <list>
 
 using namespace std;
 
@@ -16,6 +17,11 @@ struct sNode
     sNode *parent;                //Node connecting to ths node that offers shortest path so far
 };
 
+float heuristic(sNode *a, sNode *b) //Returns Euclidean distance between two nodes
+{
+    return sqrtf((a->x - b->x) * (a->x - b->x) + (a->y - b->y) * (a->y - b->y));
+}
+
 void Solve_AStar()
 {
     for (int x = 0; x < width; ++x)
@@ -27,7 +33,43 @@ void Solve_AStar()
             nodes[y * width + x].bVisited = false;
         }
 
-    //24:08
+    sNode *nodeCurrent = nodeStart;
+    nodeStart->fLocalGoal = 0.0f;
+    nodeStart->fGlobalGoal = heuristic(nodeStart, nodeEnd);
+
+    list<sNode *> listNotTestedNodes;
+    listNotTestedNodes.push_back(nodeStart);
+
+    while (!listNotTestedNodes.empty())
+    {
+        //Sort Untested nodes by Global Goal, so lowest is first
+        listNotTestedNodes.sort([](const sNode *lhs, const sNode *rhs) { return lhs->fGlobalGoal < rhs->fGlobalGoal; });
+
+        while (!listNotTestedNodes.empty() && listNotTestedNodes.front()->bVisited)
+            listNotTestedNodes.pop_front();
+
+        if (listNotTestedNodes.empty())
+            break;
+
+        nodeCurrent = listNotTestedNodes.front();
+        nodeCurrent->bVisited = true;
+
+        for (auto nodeNeighbor : nodeCurrent->vecNeighbors)
+        {
+            if (!nodeNeighbor->bVisited && !nodeNeighbor->bObstacle)
+                listNotTestedNodes.push_back(nodeNeighbor);
+
+            float fPossiblyLowerGoal = nodeCurrent->fLocalGoal + heuristic(nodeCurrent, nodeNeighbor);
+
+            if (fPossiblyLowerGoal < nodeNeighbor->fLocalGoal)
+            {
+                nodeNeighbor->parent = nodeCurrent;
+                nodeNeighbor->fLocalGoal = fPossiblyLowerGoal;
+
+                nodeNeighbor->fGlobalGoal = nodeNeighbor->fLocalGoal + heuristic(nodeNeighbor, nodeEnd);
+            }
+        }
+    }
 }
 
 sNode *nodes = nullptr;
