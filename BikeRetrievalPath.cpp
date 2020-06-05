@@ -1,15 +1,24 @@
+#include <bits10_1.h>
+#include <cmath>
 #include <iostream>
 #include <vector>
-// #include <tgmath.h>
-#include <cmath>
 
 using namespace std;
 
 float leftBlankHeuristics[15][9];
 float rightBlankHeuristics[15][9];
 
+struct cell
+{
+    int parent_i, parent_j;
+
+    //f = g + h
+    float f, g, h;
+};
+
 int main()
 {
+    //Calculate Euclidean distance
     for (int i = 0; i < 15; ++i)
     {
         for (int j = 0; j < 9; ++j)
@@ -26,6 +35,7 @@ int main()
         }
     }
 
+    //TEST: Print Matrices
     for (int i = 0; i < 15; ++i)
     {
         for (int j = 0; j < 9; ++j)

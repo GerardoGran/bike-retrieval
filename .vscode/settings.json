@@ -1,6 +1,7 @@
 {
     "files.associations": {
         "cmath": "cpp",
-        "utility": "cpp"
+        "utility": "cpp",
+        "string": "cpp"
     }
 }
