@@ -25,6 +25,7 @@ float heuristic(sNode *a, sNode *b) //Returns Euclidean distance between two nod
 }
 
 sNode *nodes = nullptr;
+// sNode *pathNodes = nullptr;
 int width = 18;
 int height = 15;
 
@@ -34,6 +35,7 @@ sNode *bikeNode = nullptr;
 
 string pathString = "";
 vector<string> path;
+float time = 0.0f;
 
 void Solve_AStar()
 {
@@ -88,6 +90,7 @@ void Solve_AStar()
 int main()
 {
     nodes = new sNode[width * height];
+    vector<sNode *> pathNodes; //Vector for storing the nodes in the shortest path
 
     //Fills Nodes;
     for (int x = 0; x < width; ++x)
@@ -159,11 +162,19 @@ int main()
         sNode *p = nodeEnd;
         while (p->parent != nullptr)
         {
+            pathNodes.push_back(p->parent);
             p->bIsPath = true;
+
+            time += (p->x - p->parent->x) * 1.875 + (p->y - p->parent->y) * 1.14;
+
             path.push_back("-> [" + to_string(p->x) + "," + to_string(p->y) + "]");
+            pathString.append(to_string(p->x) + "," + to_string(p->y) + ";");
+
             //Set next node to this node's parent
             p = p->parent;
         }
+        path.push_back("[" + to_string(nodeStart->x) + "," + to_string(nodeStart->y) + "]");
+        pathString.append(to_string(nodeStart->x) + "," + to_string(nodeStart->y) + ";");
     }
 
     //Prints parking lot
@@ -190,6 +201,6 @@ int main()
     //Print Path coords
     for (int i = path.size() - 1; i >= 0; --i)
         cout << path.at(i);
-
+    cout << "Total time needed for pt 1: " << time << " seconds";
     return 0;
 }
