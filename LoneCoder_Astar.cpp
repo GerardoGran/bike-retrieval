@@ -2,6 +2,7 @@
 #include <vector>
 #include <iostream>
 #include <list>
+#include <cmath>
 
 using namespace std;
 
@@ -9,6 +10,7 @@ struct sNode
 {
     bool bObstacle = false; //Is it an obstruction?
     bool bVisited = false;  //Have we searched it?
+    bool bIsPath = false;   //Is it in the final path?
     float fGlobalGoal;      //Distance to goal so far
     float fLocalGoal;       //Distance if we took the alternative
     int x;                  //Node position in 2D space
@@ -21,6 +23,17 @@ float heuristic(sNode *a, sNode *b) //Returns Euclidean distance between two nod
 {
     return sqrtf((a->x - b->x) * (a->x - b->x) + (a->y - b->y) * (a->y - b->y));
 }
+
+sNode *nodes = nullptr;
+int width = 18;
+int height = 15;
+
+sNode *nodeStart = nullptr;
+sNode *nodeEnd = nullptr;
+sNode *bikeNode = nullptr;
+
+string pathString = "";
+vector<string> path;
 
 void Solve_AStar()
 {
@@ -40,7 +53,7 @@ void Solve_AStar()
     list<sNode *> listNotTestedNodes;
     listNotTestedNodes.push_back(nodeStart);
 
-    while (!listNotTestedNodes.empty())
+    while (!listNotTestedNodes.empty() && nodeCurrent != nodeEnd)
     {
         //Sort Untested nodes by Global Goal, so lowest is first
         listNotTestedNodes.sort([](const sNode *lhs, const sNode *rhs) { return lhs->fGlobalGoal < rhs->fGlobalGoal; });
@@ -72,15 +85,6 @@ void Solve_AStar()
     }
 }
 
-sNode *nodes = nullptr;
-int width = 18;
-int height = 15;
-
-sNode *nodeStart = nullptr;
-sNode *nodeEnd = nullptr;
-
-string pathString = "";
-vector<string> path;
 int main()
 {
     nodes = new sNode[width * height];
@@ -93,6 +97,7 @@ int main()
             nodes[y * width + x].y = y;
             nodes[y * width + x].bObstacle = false;
             nodes[y * width + x].parent = nullptr;
+            nodes[y * width + x].bVisited = false;
             nodes[y * width + x].bVisited = false;
         }
 
@@ -119,10 +124,47 @@ int main()
                 nodes[y * width + x].vecNeighbors.push_back(&nodes[(y)*width + (x + 1)]);
         }
 
-    //TEST start and end
-    //In final code this will be decided from bike position if (bike.x < 9) -> nodeStart = &nodes[1]; etc.
-    nodeStart = &nodes[1];
-    nodeEnd = &nodes[9 * width + 7];
+    //Prints parking lot
+    for (int y = 0; y < height; ++y)
+    {
+        for (int x = 0; x < width; ++x)
+        {
+            if (nodes[y * width + x].bObstacle)
+                cout << "[ X ]";
+            else if (nodes[y * width + x].bIsPath)
+                cout << "[ O ]";
+            else
+                cout << "[" << x << "," << y << "]";
+        }
+        cout << endl;
+    }
+
+    int nodeX, nodeY;
+    cout << "Choose bike position in x: ";
+    cin >> nodeX;
+    cout << "Choose bike position in y: ";
+    cin >> nodeY;
+
+    if (nodeX < 9)
+        nodeStart = &nodes[1];
+    else
+        nodeStart = &nodes[250];
+    nodeEnd = &nodes[nodeY * width + nodeX];
+
+    Solve_AStar();
+
+    //Store path by starting at the end, following the node trail
+    if (nodeEnd != nullptr)
+    {
+        sNode *p = nodeEnd;
+        while (p->parent != nullptr)
+        {
+            p->bIsPath = true;
+            path.push_back("-> [" + to_string(p->x) + "," + to_string(p->y) + "]");
+            //Set next node to this node's parent
+            p = p->parent;
+        }
+    }
 
     //Prints parking lot
     for (int y = 0; y < height; ++y)
@@ -133,26 +175,21 @@ int main()
                 cout << "[S]";
             else if (&nodes[y * width + x] == nodeEnd)
                 cout << "[E]";
-            else if (!nodes[y * width + x].bObstacle)
-                cout << "[ ]";
-            else
+            else if (nodes[y * width + x].bObstacle)
                 cout << "[X]";
-            // cout << "[" << x << "," << y << "] ";
+            else if (nodes[y * width + x].bIsPath)
+                cout << "[O]";
+            else if (nodes[y * width + x].bVisited)
+                cout << "[-]";
+            else
+                cout << "[ ]";
         }
         cout << endl;
     }
 
-    //Store path by starting at the end, following the node trail
-    if (nodeEnd != nullptr)
-    {
-        sNode *p = nodeEnd;
-        while (p->parent != nullptr)
-        {
-            path.push_back("-> [" + to_string(p->x) + "," + to_string(p->y) + "]");
-            //Set next node to this node's parent
-            p = p->parent;
-        }
-    }
+    //Print Path coords
+    for (int i = path.size() - 1; i >= 0; --i)
+        cout << path.at(i);
 
     return 0;
 }
