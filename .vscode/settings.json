@@ -4,6 +4,7 @@
         "utility": "cpp",
         "string": "cpp",
         "vector": "cpp",
-        "xstring": "cpp"
+        "xstring": "cpp",
+        "stack": "cpp"
     }
 }

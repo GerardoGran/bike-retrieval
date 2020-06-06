@@ -1,6 +1,7 @@
 #include <cmath>
 #include <iostream>
 #include <list>
+#include <stack>
 #include <string>
 #include <vector>
 
@@ -25,7 +26,7 @@ float heuristic(sNode *a, sNode *b) //Returns Euclidean distance between two nod
 }
 
 sNode *nodes = nullptr;
-// sNode *pathNodes = nullptr;
+stack<sNode *> pathNodes;
 int width = 18;
 int height = 15;
 
@@ -35,7 +36,7 @@ sNode *nodeEnd = nullptr;
 sNode *bikeNode = nullptr;
 
 vector<string> pathString;
-vector<string> path;
+stack<string> path;
 float time = 0.0f;
 
 void Solve_AStar()
@@ -88,10 +89,14 @@ void Solve_AStar()
     }
 }
 
+void setNeighbors()
+{
+}
+
 int main()
 {
     nodes = new sNode[width * height];
-    vector<sNode *> pathNodes; //Vector for storing the nodes in the shortest path
+    stack<sNode *> pathNodes; //Vector for storing the nodes in the shortest path
 
     //Fills Nodes;
     for (int x = 0; x < width; ++x)
@@ -124,7 +129,7 @@ int main()
                 nodes[y * width + x].vecNeighbors.push_back(&nodes[(y + 1) * width + (x)]);
             if (x > 0) //West Neighbor //If not at the left
                 nodes[y * width + x].vecNeighbors.push_back(&nodes[(y)*width + (x - 1)]);
-            if (x < width - 1) //East Neighbor //If not at the right
+            if (x < width - 1 && !(x == 6 && y == 9)) //East Neighbor //If not at the right
                 nodes[y * width + x].vecNeighbors.push_back(&nodes[(y)*width + (x + 1)]);
         }
 
@@ -149,33 +154,47 @@ int main()
     cout << "Choose bike position in y: ";
     cin >> nodeY;
 
+    //Select Node Start and Node End
     if (nodeX < 9)
         nodeStart = &nodes[1];
     else
         nodeStart = &nodes[250];
+    originalStart = nodeStart;
     nodeEnd = &nodes[nodeY * width + nodeX];
 
     Solve_AStar();
 
     //Store path by starting at the end, following the node trail
+    //Walk Back through path of pt 1. and store it in path_nodes
     if (nodeEnd != nullptr)
     {
         sNode *p = nodeEnd;
         while (p->parent != nullptr)
         {
-            pathNodes.push_back(p->parent);
+            //Prepare For Mini Astar()
+            /*
+            if (p->parent->parent != nullptr)
+            {
+                p->parent->bObstacle = true;
+                nodeStart = p;
+                nodeEnd = p->parent->parent;
+                Solve_AStar();
+            }
+            */
+
+            pathNodes.push(p->parent);
             p->bIsPath = true;
 
             time += (p->x - p->parent->x) * 1.875 + (p->y - p->parent->y) * 1.14; //Adds time necessary for moving platforms
 
-            path.push_back("-> [" + to_string(p->x) + "," + to_string(p->y) + "]");
+            path.push("-> [" + to_string(p->x) + "," + to_string(p->y) + "]");
             pathString.push_back(to_string(p->x) + "," + to_string(p->y) + ";");
 
             //Set next node to this node's parent
             p = p->parent;
         }
-        path.push_back("[" + to_string(nodeStart->x) + "," + to_string(nodeStart->y) + "]");
-        pathString.push_back(to_string(nodeStart->x) + "," + to_string(nodeStart->y) + ";");
+        path.push("[" + to_string(originalStart->x) + "," + to_string(originalStart->y) + "]");
+        pathString.push_back(to_string(originalStart->x) + "," + to_string(originalStart->y) + ";");
     }
 
     //Prints parking lot
@@ -200,8 +219,11 @@ int main()
     }
 
     //Print Path coords
-    for (int i = path.size() - 1; i >= 0; --i)
-        cout << pathString.at(i);
+    while (!path.empty())
+    {
+        cout << path.top();
+        path.pop();
+    }
     cout << endl
          << "Total time needed for pt 1: " << time << " seconds";
     return 0;
