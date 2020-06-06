@@ -4,6 +4,7 @@
 #include <stack>
 #include <string>
 #include <vector>
+#include <queue>
 
 using namespace std;
 
@@ -26,7 +27,7 @@ float heuristic(sNode *a, sNode *b) //Returns Euclidean distance between two nod
 }
 
 sNode *nodes = nullptr;
-stack<sNode *> pathNodes;
+queue<sNode *> pathNodes;
 int width = 18;
 int height = 15;
 
@@ -130,7 +131,6 @@ void fillNodes()
 
 void fillObstacles()
 {
-
     //Fills obstacles;
     nodes[7 * width + 7].bObstacle = true;
     nodes[8 * width + 7].bObstacle = true;
@@ -159,7 +159,30 @@ void printCoords()
     }
 }
 
-void printPart1()
+void storePt1()
+{
+    if (nodeEnd != nullptr)
+    {
+        sNode *p = nodeEnd;
+        while (p->parent != nullptr)
+        {
+            pathNodes.push(p->parent); //Stores backwards path in FIFO to iterate over it for Pt 2
+            p->bIsPath = true;         //For Representation in printPt1()
+
+            time += (abs(p->parent->x - p->x)) * 1.875 + (abs(p->parent->y - p->y)) * 1.14; //Adds time necessary for moving platforms
+
+            path.push("-> [" + to_string(p->x) + "," + to_string(p->y) + "]");   //for printPt1()
+            pathString.push_back(to_string(p->x) + "," + to_string(p->y) + ";"); //for Final Representation
+
+            //Set next node to this node's parent
+            p = p->parent;
+        }
+        path.push("[" + to_string(originalStart->x) + "," + to_string(originalStart->y) + "]");      //for printPt1()
+        pathString.push_back(to_string(originalStart->x) + "," + to_string(originalStart->y) + ";"); //for Final Representation
+    }
+}
+
+void printPt1()
 {
     //Prints parking lot
     for (int y = 0; y < height; ++y)
@@ -189,13 +212,13 @@ void printPart1()
         path.pop();
     }
     cout << endl
-         << "Total time needed for pt 1: " << time << " seconds";
+         << "Total time needed for pt 1: " << time << " seconds" << endl;
 }
 
 int main()
 {
     nodes = new sNode[width * height];
-    stack<sNode *> pathNodes; //Vector for storing the nodes in the shortest path
+    queue<sNode *> pathNodes; //Vector for storing the nodes in the shortest path
 
     fillNodes();
 
@@ -219,17 +242,38 @@ int main()
     originalStart = nodeStart;
     nodeEnd = &nodes[nodeY * width + nodeX];
 
-    Solve_AStar();
+    Solve_AStar(); //Solves Pt1
 
     //Store path by starting at the end, following the node trail
     //Walk Back through path of pt 1. and store it in path_nodes
-    if (nodeEnd != nullptr)
+    storePt1();
+
+    printPt1();
+
+    //BEGINNING OF PT.2
+
+    sNode *p = nodeEnd;
+    while (p->parent->parent != nullptr)
     {
-        sNode *p = nodeEnd;
-        while (p->parent != nullptr)
-        {
-            //Prepare For Mini Astar()
-            /*
+        nodeStart = p;
+        p->parent->bObstacle = true;
+        nodeEnd = p->parent->parent;
+
+        Solve_AStar();
+
+        storePt1();
+        printPt1();
+
+        p->parent->bObstacle = false;
+
+        p = p->parent;
+    }
+
+    return 0;
+}
+
+//Prepare For Mini Astar()
+/*
             if (p->parent->parent != nullptr)
             {
                 p->parent->bObstacle = true;
@@ -238,23 +282,3 @@ int main()
                 Solve_AStar();
             }
             */
-
-            pathNodes.push(p->parent);
-            p->bIsPath = true;
-
-            time += (abs(p->parent->x - p->x)) * 1.875 + (abs(p->parent->y - p->y)) * 1.14; //Adds time necessary for moving platforms
-
-            path.push("-> [" + to_string(p->x) + "," + to_string(p->y) + "]");
-            pathString.push_back(to_string(p->x) + "," + to_string(p->y) + ";");
-
-            //Set next node to this node's parent
-            p = p->parent;
-        }
-        path.push("[" + to_string(originalStart->x) + "," + to_string(originalStart->y) + "]");
-        pathString.push_back(to_string(originalStart->x) + "," + to_string(originalStart->y) + ";");
-    }
-
-    printPart1();
-
-    return 0;
-}
