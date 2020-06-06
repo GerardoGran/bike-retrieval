@@ -35,7 +35,6 @@ int height = 15;
 sNode *nodeStart = nullptr;
 sNode *originalStart = nullptr;
 sNode *nodeEnd = nullptr;
-sNode *bikeNode = nullptr;
 
 string finalPathString = "";
 vector<string> pathString;
@@ -267,7 +266,6 @@ int main()
 {
     nodes = new sNode[width * height];
     vector<sNode *> pathNodes; //Vector for storing the nodes in the shortest path
-    string ahorasi = "";
 
     fillNodes();
 
