@@ -91,13 +91,30 @@ void Solve_AStar()
 
 void setNeighbors()
 {
+    //Set Connections
+    for (int x = 0; x < width; ++x)
+        for (int y = 0; y < height; ++y)
+        {
+            //North Neighbor //If not on the top
+            if (y > 0)
+                nodes[y * width + x].vecNeighbors.push_back(&nodes[(y - 1) * width + (x)]);
+
+            //South Neighbor //If not on the bottom
+            if (y < height - 1)
+                nodes[y * width + x].vecNeighbors.push_back(&nodes[(y + 1) * width + (x)]);
+
+            //West Neighbor //If not at the left
+            if (x > 0 && !(x == 8 && y == 9) && !(x == 7 && y == 6) && !(x == 11 && y == 6) && !(x == 10 && y == 9) && !(x == 13 && y == 9))
+                nodes[y * width + x].vecNeighbors.push_back(&nodes[(y)*width + (x - 1)]);
+
+            //East Neighbor //If not at the right
+            if (x < width - 1 && !(x == 6 && y == 9) && !(x == 7 && y == 6) && !(x == 9 && y == 6) && !(x == 10 && y == 9) && !(x == 13 && y == 9) && !(x == 12 && y == 6))
+                nodes[y * width + x].vecNeighbors.push_back(&nodes[(y)*width + (x + 1)]);
+        }
 }
 
-int main()
+void fillNodes()
 {
-    nodes = new sNode[width * height];
-    stack<sNode *> pathNodes; //Vector for storing the nodes in the shortest path
-
     //Fills Nodes;
     for (int x = 0; x < width; ++x)
         for (int y = 0; y < height; ++y)
@@ -109,6 +126,10 @@ int main()
             nodes[y * width + x].bVisited = false;
             nodes[y * width + x].bVisited = false;
         }
+}
+
+void fillObstacles()
+{
 
     //Fills obstacles;
     nodes[7 * width + 7].bObstacle = true;
@@ -118,21 +139,10 @@ int main()
     for (int x = 13; x < width; ++x)
         for (int y = 7; y < 9; ++y)
             nodes[y * width + x].bObstacle = true;
+}
 
-    //Set Connections
-    for (int x = 0; x < width; ++x)
-        for (int y = 0; y < height; ++y)
-        {
-            if (y > 0) //North Neighbor //If not on the top
-                nodes[y * width + x].vecNeighbors.push_back(&nodes[(y - 1) * width + (x)]);
-            if (y < height - 1) //South Neighbor //If not on the bottom
-                nodes[y * width + x].vecNeighbors.push_back(&nodes[(y + 1) * width + (x)]);
-            if (x > 0) //West Neighbor //If not at the left
-                nodes[y * width + x].vecNeighbors.push_back(&nodes[(y)*width + (x - 1)]);
-            if (x < width - 1 && !(x == 6 && y == 9)) //East Neighbor //If not at the right
-                nodes[y * width + x].vecNeighbors.push_back(&nodes[(y)*width + (x + 1)]);
-        }
-
+void printCoords()
+{
     //Prints parking lot
     for (int y = 0; y < height; ++y)
     {
@@ -147,6 +157,53 @@ int main()
         }
         cout << endl;
     }
+}
+
+void printPart1()
+{
+    //Prints parking lot
+    for (int y = 0; y < height; ++y)
+    {
+        for (int x = 0; x < width; ++x)
+        {
+            if (&nodes[y * width + x] == nodeStart)
+                cout << "[S]";
+            else if (&nodes[y * width + x] == nodeEnd)
+                cout << "[E]";
+            else if (nodes[y * width + x].bObstacle)
+                cout << "[X]";
+            else if (nodes[y * width + x].bIsPath)
+                cout << "[O]";
+            else if (nodes[y * width + x].bVisited)
+                cout << "[-]";
+            else
+                cout << "[ ]";
+        }
+        cout << endl;
+    }
+
+    //Print Path coords
+    while (!path.empty())
+    {
+        cout << path.top();
+        path.pop();
+    }
+    cout << endl
+         << "Total time needed for pt 1: " << time << " seconds";
+}
+
+int main()
+{
+    nodes = new sNode[width * height];
+    stack<sNode *> pathNodes; //Vector for storing the nodes in the shortest path
+
+    fillNodes();
+
+    fillObstacles();
+
+    setNeighbors();
+
+    printCoords();
 
     int nodeX, nodeY;
     cout << "Choose bike position in x: ";
@@ -185,7 +242,7 @@ int main()
             pathNodes.push(p->parent);
             p->bIsPath = true;
 
-            time += (p->x - p->parent->x) * 1.875 + (p->y - p->parent->y) * 1.14; //Adds time necessary for moving platforms
+            time += (abs(p->parent->x - p->x)) * 1.875 + (abs(p->parent->y - p->y)) * 1.14; //Adds time necessary for moving platforms
 
             path.push("-> [" + to_string(p->x) + "," + to_string(p->y) + "]");
             pathString.push_back(to_string(p->x) + "," + to_string(p->y) + ";");
@@ -197,34 +254,7 @@ int main()
         pathString.push_back(to_string(originalStart->x) + "," + to_string(originalStart->y) + ";");
     }
 
-    //Prints parking lot
-    for (int y = 0; y < height; ++y)
-    {
-        for (int x = 0; x < width; ++x)
-        {
-            if (&nodes[y * width + x] == nodeStart)
-                cout << "[S]";
-            else if (&nodes[y * width + x] == nodeEnd)
-                cout << "[E]";
-            else if (nodes[y * width + x].bObstacle)
-                cout << "[X]";
-            else if (nodes[y * width + x].bIsPath)
-                cout << "[O]";
-            else if (nodes[y * width + x].bVisited)
-                cout << "[-]";
-            else
-                cout << "[ ]";
-        }
-        cout << endl;
-    }
+    printPart1();
 
-    //Print Path coords
-    while (!path.empty())
-    {
-        cout << path.top();
-        path.pop();
-    }
-    cout << endl
-         << "Total time needed for pt 1: " << time << " seconds";
     return 0;
 }
