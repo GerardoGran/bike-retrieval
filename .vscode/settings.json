@@ -3,6 +3,7 @@
         "cmath": "cpp",
         "utility": "cpp",
         "string": "cpp",
-        "vector": "cpp"
+        "vector": "cpp",
+        "xstring": "cpp"
     }
 }

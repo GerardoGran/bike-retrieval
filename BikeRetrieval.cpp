@@ -1,8 +1,8 @@
-#include <string>
-#include <vector>
+#include <cmath>
 #include <iostream>
 #include <list>
-#include <cmath>
+#include <string>
+#include <vector>
 
 using namespace std;
 
@@ -30,10 +30,11 @@ int width = 18;
 int height = 15;
 
 sNode *nodeStart = nullptr;
+sNode *originalStart = nullptr;
 sNode *nodeEnd = nullptr;
 sNode *bikeNode = nullptr;
 
-string pathString = "";
+vector<string> pathString;
 vector<string> path;
 float time = 0.0f;
 
@@ -117,13 +118,13 @@ int main()
     for (int x = 0; x < width; ++x)
         for (int y = 0; y < height; ++y)
         {
-            if (y > 0) //If not on the top
+            if (y > 0) //North Neighbor //If not on the top
                 nodes[y * width + x].vecNeighbors.push_back(&nodes[(y - 1) * width + (x)]);
-            if (y < height - 1) //If not on the bottom
+            if (y < height - 1) //South Neighbor //If not on the bottom
                 nodes[y * width + x].vecNeighbors.push_back(&nodes[(y + 1) * width + (x)]);
-            if (x > 0) //If not at the left
+            if (x > 0) //West Neighbor //If not at the left
                 nodes[y * width + x].vecNeighbors.push_back(&nodes[(y)*width + (x - 1)]);
-            if (x < width - 1) //If not at the right
+            if (x < width - 1) //East Neighbor //If not at the right
                 nodes[y * width + x].vecNeighbors.push_back(&nodes[(y)*width + (x + 1)]);
         }
 
@@ -165,16 +166,16 @@ int main()
             pathNodes.push_back(p->parent);
             p->bIsPath = true;
 
-            time += (p->x - p->parent->x) * 1.875 + (p->y - p->parent->y) * 1.14;
+            time += (p->x - p->parent->x) * 1.875 + (p->y - p->parent->y) * 1.14; //Adds time necessary for moving platforms
 
             path.push_back("-> [" + to_string(p->x) + "," + to_string(p->y) + "]");
-            pathString.append(to_string(p->x) + "," + to_string(p->y) + ";");
+            pathString.push_back(to_string(p->x) + "," + to_string(p->y) + ";");
 
             //Set next node to this node's parent
             p = p->parent;
         }
         path.push_back("[" + to_string(nodeStart->x) + "," + to_string(nodeStart->y) + "]");
-        pathString.append(to_string(nodeStart->x) + "," + to_string(nodeStart->y) + ";");
+        pathString.push_back(to_string(nodeStart->x) + "," + to_string(nodeStart->y) + ";");
     }
 
     //Prints parking lot
@@ -200,7 +201,8 @@ int main()
 
     //Print Path coords
     for (int i = path.size() - 1; i >= 0; --i)
-        cout << path.at(i);
-    cout << "Total time needed for pt 1: " << time << " seconds";
+        cout << pathString.at(i);
+    cout << endl
+         << "Total time needed for pt 1: " << time << " seconds";
     return 0;
 }
