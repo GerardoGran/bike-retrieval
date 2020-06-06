@@ -10,6 +10,7 @@ using namespace std;
 
 struct sNode
 {
+    bool bCabin = false;
     bool bObstacle = false; //Is it an obstruction?
     bool bVisited = false;  //Have we searched it?
     bool bIsPath = false;   //Is it in the final path?
@@ -27,7 +28,7 @@ float heuristic(sNode *a, sNode *b) //Returns Euclidean distance between two nod
 }
 
 sNode *nodes = nullptr;
-queue<sNode *> pathNodes;
+vector<sNode *> pathNodes;
 int width = 18;
 int height = 15;
 
@@ -36,6 +37,7 @@ sNode *originalStart = nullptr;
 sNode *nodeEnd = nullptr;
 sNode *bikeNode = nullptr;
 
+string finalPathString = "";
 vector<string> pathString;
 stack<string> path;
 float time = 0.0f;
@@ -126,6 +128,7 @@ void fillNodes()
             nodes[y * width + x].parent = nullptr;
             nodes[y * width + x].bVisited = false;
             nodes[y * width + x].bVisited = false;
+            nodes[y * width + x].bIsPath = false;
         }
 }
 
@@ -136,9 +139,18 @@ void fillObstacles()
     nodes[8 * width + 7].bObstacle = true;
     nodes[7 * width + 10].bObstacle = true;
     nodes[8 * width + 10].bObstacle = true;
+    nodes[0 * width + 0].bObstacle = true;
+    nodes[1 * width + 0].bObstacle = true;
+    nodes[13 * width + 17].bObstacle = true;
+    nodes[14 * width + 17].bObstacle = true;
     for (int x = 13; x < width; ++x)
         for (int y = 7; y < 9; ++y)
             nodes[y * width + x].bObstacle = true;
+
+    nodes[0 * width + 0].bCabin = true;
+    nodes[1 * width + 0].bCabin = true;
+    nodes[13 * width + 17].bCabin = true;
+    nodes[14 * width + 17].bCabin = true;
 }
 
 void printCoords()
@@ -159,30 +171,64 @@ void printCoords()
     }
 }
 
-void storePt1()
+vector<sNode *> storePt1()
 {
     if (nodeEnd != nullptr)
     {
         sNode *p = nodeEnd;
         while (p->parent != nullptr)
         {
-            pathNodes.push(p->parent); //Stores backwards path in FIFO to iterate over it for Pt 2
-            p->bIsPath = true;         //For Representation in printPt1()
+            pathNodes.push_back(p->parent); //Stores backwards path in FIFO to iterate over it for Pt 2
+            p->bIsPath = true;              //For Representation in printStep()
 
             time += (abs(p->parent->x - p->x)) * 1.875 + (abs(p->parent->y - p->y)) * 1.14; //Adds time necessary for moving platforms
 
-            path.push("-> [" + to_string(p->x) + "," + to_string(p->y) + "]");   //for printPt1()
+            path.push("-> [" + to_string(p->x) + "," + to_string(p->y) + "]");   //for printStep()
             pathString.push_back(to_string(p->x) + "," + to_string(p->y) + ";"); //for Final Representation
 
             //Set next node to this node's parent
             p = p->parent;
         }
-        path.push("[" + to_string(originalStart->x) + "," + to_string(originalStart->y) + "]");      //for printPt1()
-        pathString.push_back(to_string(originalStart->x) + "," + to_string(originalStart->y) + ";"); //for Final Representation
+        path.push("-> [" + to_string(nodeStart->x) + "," + to_string(nodeStart->y) + "]");   //for printStep()
+        pathString.push_back(to_string(nodeStart->x) + "," + to_string(nodeStart->y) + ";"); //for Final Representation
+
+        while (!path.empty())
+        {
+            finalPathString.append(path.top());
+            path.pop();
+        }
+
+        return pathNodes;
     }
 }
 
-void printPt1()
+void storePt2()
+{
+    if (nodeEnd != nullptr)
+    {
+        sNode *p = nodeEnd;
+        while (p->parent != nullptr)
+        {
+            p->bIsPath = true; //For Representation in printStep()
+
+            time += (abs(p->parent->x - p->x)) * 1.875 + (abs(p->parent->y - p->y)) * 1.14; //Adds time necessary for moving platforms
+
+            path.push("-> [" + to_string(p->x) + "," + to_string(p->y) + "]");   //for printStep()
+            pathString.push_back(to_string(p->x) + "," + to_string(p->y) + ";"); //for Final Representation
+
+            //Set next node to this node's parent
+            p = p->parent;
+        }
+
+        while (!path.empty())
+        {
+            finalPathString.append(path.top());
+            path.pop();
+        }
+    }
+}
+
+void printStep()
 {
     //Prints parking lot
     for (int y = 0; y < height; ++y)
@@ -193,6 +239,8 @@ void printPt1()
                 cout << "[S]";
             else if (&nodes[y * width + x] == nodeEnd)
                 cout << "[E]";
+            else if (nodes[y * width + x].bCabin)
+                cout << "[*]";
             else if (nodes[y * width + x].bObstacle)
                 cout << "[X]";
             else if (nodes[y * width + x].bIsPath)
@@ -218,7 +266,8 @@ void printPt1()
 int main()
 {
     nodes = new sNode[width * height];
-    queue<sNode *> pathNodes; //Vector for storing the nodes in the shortest path
+    vector<sNode *> pathNodes; //Vector for storing the nodes in the shortest path
+    string ahorasi = "";
 
     fillNodes();
 
@@ -246,39 +295,45 @@ int main()
 
     //Store path by starting at the end, following the node trail
     //Walk Back through path of pt 1. and store it in path_nodes
-    storePt1();
+    pathNodes = storePt1();
 
-    printPt1();
-
+    // cin.get();
+    // printStep();
     //BEGINNING OF PT.2
 
-    sNode *p = nodeEnd;
-    while (p->parent->parent != nullptr)
+    /*
+    fillNodes();
+    fillObstacles();
+    setNeighbors();
+    */
+
+    // cin.get();
+    for (int i = 0; i < pathNodes.size() - 1; ++i)
     {
-        nodeStart = p;
-        p->parent->bObstacle = true;
-        nodeEnd = p->parent->parent;
+        sNode *bike = pathNodes.at(i);
+        if (bike != originalStart)
+        {
+            nodeStart = nodeEnd;
+            bike->bObstacle = true;
+            nodeEnd = pathNodes.at(i + 1);
 
-        Solve_AStar();
+            Solve_AStar();
 
-        storePt1();
-        printPt1();
+            storePt2();
+            // printStep();
 
-        p->parent->bObstacle = false;
+            bike->bObstacle = false;
 
-        p = p->parent;
+            nodeStart = nodeEnd;
+            nodeEnd = bike;
+
+            Solve_AStar();
+            storePt2();
+        }
     }
+
+    printStep();
+    cout << finalPathString;
 
     return 0;
 }
-
-//Prepare For Mini Astar()
-/*
-            if (p->parent->parent != nullptr)
-            {
-                p->parent->bObstacle = true;
-                nodeStart = p;
-                nodeEnd = p->parent->parent;
-                Solve_AStar();
-            }
-            */
