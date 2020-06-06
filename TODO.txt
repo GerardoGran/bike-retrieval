@@ -1,0 +1,6 @@
+TODO:
+README;
+SELECCION ALEATORIA;
+RUNTIME;
+CLEAN CODE;
+Checar tiempo cuando esta en adyacencia a un obstaculo.
