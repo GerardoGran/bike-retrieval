@@ -267,6 +267,11 @@ void printStep()
 
 int main()
 {
+    int nodeX, nodeY; //position in X and position in Y
+	string option;	  //string used for random or specific bike
+	bool input = false; //Run the while loop until a valid node is specified.
+	clock_t time_req; //Calculate runtime
+    
     nodes = new sNode[width * height];
     vector<sNode *> pathNodes; //Vector for storing the nodes in the shortest path
 
@@ -277,14 +282,35 @@ int main()
     setNeighbors();
 
     printCoords();
+    
+    while (!input)
+	{
+		cout << "Random Pick please insert A or Specific Bike Retrieval please insert B" << endl;
+		cin >> option;
+		if (option.compare("A") == 0) //Random Option
+		{
+			nodeX = rand() % 17;
+			nodeY = rand() % 14;
+			cout << "Random Position: "
+			 << "[" << nodeX << "," << nodeY << "]" << endl;
+		}
+		else if (option.compare("B") == 0) //Specific input
+		{
+			cout << "Choose bike position in x: ";
+			cin >> nodeX;
+			cout << "Choose bike position in y: ";
+			cin >> nodeY;
+		}
+		else
+		{
+			cout << "Please insert A or B in capital letters." << endl;
+		}
+		//If the random numbers or the specific cabin is in a blocked node the while loop will run until a valid node is specified. 
+		(nodes[nodeY * width + nodeX].bObstacle == true || nodes[nodeY * width + nodeX].bCabin == true) ? input=false : input=true;
+	}
 
-    //TODO: Add Random Option
-    int nodeX, nodeY;
-    cout << "Choose bike position in x: ";
-    cin >> nodeX;
-    cout << "Choose bike position in y: ";
-    cin >> nodeY;
-
+    //CLOCK STARTS HERE 
+	time_req = clock();
     //Select Node Start and Node End
     if (nodeX < 9)
         nodeStart = &nodes[1];
@@ -335,9 +361,12 @@ int main()
             storePt2();
         }
     }
+    //CLOCK ENDS HERE!
+	time_req = clock() - time_req;
 
     printStep();
     cout << finalPathString;
+    cout<<"Total Runtime: "<< (float)time_req/CLOCKS_PER_SEC << " seconds." <<endl;
 
     return 0;
 }
