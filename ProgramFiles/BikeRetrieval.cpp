@@ -275,6 +275,7 @@ int main()
 
     printCoords();
 
+    //TODO: Add Random Option
     int nodeX, nodeY;
     cout << "Choose bike position in x: ";
     cin >> nodeX;
@@ -297,9 +298,11 @@ int main()
 
     // cin.get();
     // printStep();
+
     //BEGINNING OF PT.2
 
     /*
+    // Resets nodes
     fillNodes();
     fillObstacles();
     setNeighbors();
