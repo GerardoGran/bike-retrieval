@@ -10,16 +10,16 @@ using namespace std;
 
 struct sNode
 {
-    bool bCabin = false;
-    bool bObstacle = false; //Is it an obstruction?
-    bool bVisited = false;  //Have we searched it?
-    bool bIsPath = false;   //Is it in the final path?
-    float fGlobalGoal;      //Distance to goal so far
-    float fLocalGoal;       //Distance if we took the alternative
-    int x;                  //Node position in 2D space
+    bool bCabin = false;          //Is it a cabin?
+    bool bObstacle = false;       //Is it an obstruction?
+    bool bVisited = false;        //Have we searched it?
+    bool bIsPath = false;         //Is it in the final path?
+    float fGlobalGoal = INFINITY; //Distance to goal so far
+    float fLocalGoal = INFINITY;  //Distance if we took the alternative
+    int x;                        //Node position in 2D space
     int y;
     vector<sNode *> vecNeighbors; //Connections to neighbors
-    sNode *parent;                //Node connecting to ths node that offers shortest path so far
+    sNode *parent = nullptr;      //Node connecting to ths node that offers shortest path so far
 };
 
 float heuristic(sNode *a, sNode *b) //Returns Euclidean distance between two nodes
@@ -43,6 +43,7 @@ float time = 0.0f;
 
 void Solve_AStar()
 {
+
     for (int x = 0; x < width; ++x)
         for (int y = 0; y < height; ++y)
         {
@@ -52,40 +53,39 @@ void Solve_AStar()
             nodes[y * width + x].bVisited = false;
         }
 
-    sNode *nodeCurrent = nodeStart;
-    nodeStart->fLocalGoal = 0.0f;
-    nodeStart->fGlobalGoal = heuristic(nodeStart, nodeEnd);
+    sNode *nodeCurrent = nodeStart;                         // You start at the start duh
+    nodeStart->fLocalGoal = 0.0f;                           // G (Distance traveled)
+    nodeStart->fGlobalGoal = heuristic(nodeStart, nodeEnd); // Heuristic (Distance to Goal)
 
-    list<sNode *> listNotTestedNodes;
-    listNotTestedNodes.push_back(nodeStart);
+    list<sNode *> listNotTestedNodes;        // Discovered nodes whose neighbors have not been checked
+    listNotTestedNodes.push_back(nodeStart); // Adds Starting node to start there
 
-    while (!listNotTestedNodes.empty() && nodeCurrent != nodeEnd)
+    while (!listNotTestedNodes.empty() && nodeCurrent != nodeEnd) //Stop if the list is empty, meaning no path is possible, or if currentNode is the End, meaning the path has been found
     {
         //Sort Untested nodes by Global Goal, so lowest is first
-        listNotTestedNodes.sort([](const sNode *lhs, const sNode *rhs) { return lhs->fGlobalGoal < rhs->fGlobalGoal; });
+        listNotTestedNodes.sort([](const sNode *lhs, const sNode *rhs) { return lhs->fGlobalGoal < rhs->fGlobalGoal; }); //Sort the list with a lambda function based on the total weight of the path (f = g + h)
 
-        while (!listNotTestedNodes.empty() && listNotTestedNodes.front()->bVisited)
+        while (!listNotTestedNodes.empty() && listNotTestedNodes.front()->bVisited) //Ignore visited nodes
             listNotTestedNodes.pop_front();
 
-        if (listNotTestedNodes.empty())
+        if (listNotTestedNodes.empty()) //Break if no path is possible
             break;
 
-        nodeCurrent = listNotTestedNodes.front();
-        nodeCurrent->bVisited = true;
+        nodeCurrent = listNotTestedNodes.front(); // Move to next node
+        nodeCurrent->bVisited = true;             // Declare it has been visited
 
-        for (auto nodeNeighbor : nodeCurrent->vecNeighbors)
+        for (auto nodeNeighbor : nodeCurrent->vecNeighbors) // Iterate over each neighbor
         {
-            if (!nodeNeighbor->bVisited && !nodeNeighbor->bObstacle)
+            if (!nodeNeighbor->bVisited && !nodeNeighbor->bObstacle) // Add all not yet visited nodes that are not obstacles
                 listNotTestedNodes.push_back(nodeNeighbor);
 
-            float fPossiblyLowerGoal = nodeCurrent->fLocalGoal + heuristic(nodeCurrent, nodeNeighbor);
+            float fPossiblyLowerGoal = nodeCurrent->fLocalGoal + heuristic(nodeCurrent, nodeNeighbor); // Total Distance of current node
 
-            if (fPossiblyLowerGoal < nodeNeighbor->fLocalGoal)
+            if (fPossiblyLowerGoal < nodeNeighbor->fLocalGoal) // If the new total path is smaller:
             {
-                nodeNeighbor->parent = nodeCurrent;
-                nodeNeighbor->fLocalGoal = fPossiblyLowerGoal;
-
-                nodeNeighbor->fGlobalGoal = nodeNeighbor->fLocalGoal + heuristic(nodeNeighbor, nodeEnd);
+                nodeNeighbor->parent = nodeCurrent;                                                      // Make it part of the path
+                nodeNeighbor->fLocalGoal = fPossiblyLowerGoal;                                           // Assign travelled path weight
+                nodeNeighbor->fGlobalGoal = nodeNeighbor->fLocalGoal + heuristic(nodeNeighbor, nodeEnd); // Calculate new total path weight
             }
         }
     }
@@ -159,7 +159,9 @@ void printCoords()
     {
         for (int x = 0; x < width; ++x)
         {
-            if (nodes[y * width + x].bObstacle)
+            if (nodes[y * width + x].bCabin)
+                cout << "[ * ]";
+            else if (nodes[y * width + x].bObstacle)
                 cout << "[ X ]";
             else if (nodes[y * width + x].bIsPath)
                 cout << "[ O ]";
