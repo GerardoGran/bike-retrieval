@@ -40,7 +40,7 @@ sNode *nodeEnd = nullptr;
 string finalPathString = "";
 vector<string> pathString;
 stack<string> path;
-float time = 0.0f;
+float timeToMove = 0.0f;
 
 void Solve_AStar()
 {
@@ -183,7 +183,7 @@ vector<sNode *> storePt1()
             pathNodes.push_back(p->parent); //Stores backwards path in FIFO to iterate over it for Pt 2
             p->bIsPath = true;              //For Representation in printStep()
 
-            time += (abs(p->parent->x - p->x)) * 1.875 + (abs(p->parent->y - p->y)) * 1.14; //Adds time necessary for moving platforms
+            timeToMove += (abs(p->parent->x - p->x)) * 1.875f + (abs(p->parent->y - p->y)) * 1.14f; //Adds time necessary for moving platforms
 
             path.push("-> [" + to_string(p->x) + "," + to_string(p->y) + "]");   //for printStep()
             pathString.push_back(to_string(p->x) + "," + to_string(p->y) + ";"); //for Final Representation
@@ -213,7 +213,7 @@ void storePt2()
         {
             p->bIsPath = true; //For Representation in printStep()
 
-            time += (abs(p->parent->x - p->x)) * 1.875 + (abs(p->parent->y - p->y)) * 1.14; //Adds time necessary for moving platforms
+            timeToMove += (abs(p->parent->x - p->x)) * 1.875f + (abs(p->parent->y - p->y)) * 1.14f; //Adds time necessary for moving platforms
 
             path.push("-> [" + to_string(p->x) + "," + to_string(p->y) + "]");   //for printStep()
             pathString.push_back(to_string(p->x) + "," + to_string(p->y) + ";"); //for Final Representation
@@ -262,16 +262,16 @@ void printStep()
         path.pop();
     }
     cout << endl
-         << "Total time needed for pt 1: " << time << " seconds" << endl;
+         << "Total time needed for pt 1: " << timeToMove << " seconds" << endl;
 }
 
 int main()
 {
-    int nodeX, nodeY; //position in X and position in Y
-	string option;	  //string used for random or specific bike
-	bool input = false; //Run the while loop until a valid node is specified.
-	clock_t time_req; //Calculate runtime
-    
+    int nodeX, nodeY;   //position in X and position in Y
+    string option;      //string used for random or specific bike
+    bool input = false; //Run the while loop until a valid node is specified.
+    clock_t time_req;   //Calculate runtime
+
     nodes = new sNode[width * height];
     vector<sNode *> pathNodes; //Vector for storing the nodes in the shortest path
 
@@ -282,35 +282,35 @@ int main()
     setNeighbors();
 
     printCoords();
-    
-    while (!input)
-	{
-		cout << "Random Pick please insert A or Specific Bike Retrieval please insert B" << endl;
-		cin >> option;
-		if (option.compare("A") == 0) //Random Option
-		{
-			nodeX = rand() % 17;
-			nodeY = rand() % 14;
-			cout << "Random Position: "
-			 << "[" << nodeX << "," << nodeY << "]" << endl;
-		}
-		else if (option.compare("B") == 0) //Specific input
-		{
-			cout << "Choose bike position in x: ";
-			cin >> nodeX;
-			cout << "Choose bike position in y: ";
-			cin >> nodeY;
-		}
-		else
-		{
-			cout << "Please insert A or B in capital letters." << endl;
-		}
-		//If the random numbers or the specific cabin is in a blocked node the while loop will run until a valid node is specified. 
-		(nodes[nodeY * width + nodeX].bObstacle == true || nodes[nodeY * width + nodeX].bCabin == true) ? input=false : input=true;
-	}
 
-    //CLOCK STARTS HERE 
-	time_req = clock();
+    while (!input)
+    {
+        cout << "Random Pick please insert A or Specific Bike Retrieval please insert B" << endl;
+        cin >> option;
+        if (option.compare("A") == 0) //Random Option
+        {
+            nodeX = rand() % 17;
+            nodeY = rand() % 14;
+            cout << "Random Position: "
+                 << "[" << nodeX << "," << nodeY << "]" << endl;
+        }
+        else if (option.compare("B") == 0) //Specific input
+        {
+            cout << "Choose bike position in x: ";
+            cin >> nodeX;
+            cout << "Choose bike position in y: ";
+            cin >> nodeY;
+        }
+        else
+        {
+            cout << "Please insert A or B in capital letters." << endl;
+        }
+        //If the random numbers or the specific cabin is in a blocked node the while loop will run until a valid node is specified.
+        (nodes[nodeY * width + nodeX].bObstacle == true || nodes[nodeY * width + nodeX].bCabin == true) ? input = false : input = true;
+    }
+
+    //CLOCK STARTS HERE
+    time_req = clock();
     //Select Node Start and Node End
     if (nodeX < 9)
         nodeStart = &nodes[1];
@@ -362,11 +362,11 @@ int main()
         }
     }
     //CLOCK ENDS HERE!
-	time_req = clock() - time_req;
+    time_req = clock() - time_req;
 
     printStep();
     cout << finalPathString;
-    cout<<"Total Runtime: "<< (float)time_req/CLOCKS_PER_SEC << " seconds." <<endl;
+    cout << "Total Runtime: " << (float)time_req / CLOCKS_PER_SEC << " seconds." << endl;
 
     return 0;
 }
